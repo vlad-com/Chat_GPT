@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2023-10-03 14:10+0300\n"
+"POT-Creation-Date: 2023-10-03 21:33+0300\n"
 "PO-Revision-Date: 2023-10-02 22:36+0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en\n"
@@ -18,46 +18,46 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.12.1\n"
 
-#: main.py:62
+#: main.py:63
+msgid "Currently, the character limit for ChatGPT is 2048 characters"
+msgstr ""
+
+#: main.py:68
+msgid "processing..."
+msgstr ""
+
+#: main.py:77
+msgid "Nice try!"
+msgstr "Error. Nice try!"
+
+#: main.py:97
 msgid "Hello, {name}, im Chat GPT"
 msgstr ""
 
-#: main.py:71
+#: main.py:106
 msgid ""
 "This is a AI bot that will answer your questions.\n"
 "Change language: /language /lang /l\n"
 "Create image(works only with GPT-4): /image /img /i"
 msgstr ""
 
-#: main.py:81
+#: main.py:116
 msgid ""
 "Please add a description of the image after the /image command. For "
 "example, /image Neon City."
 msgstr ""
 
-#: main.py:89
+#: main.py:124
 msgid "An error occurred during image generation:"
 msgstr ""
 
-#: main.py:92
+#: main.py:127
 msgid "Sorry, works only with gpt-4"
 msgstr ""
 
-#: main.py:100
+#: main.py:135
 msgid "language_selection"
 msgstr "Select language:"
-
-#: main.py:129
-msgid "Currently, the character limit for ChatGPT is 2048 characters"
-msgstr ""
-
-#: main.py:140
-msgid "processing..."
-msgstr ""
-
-#: main.py:148
-msgid "Nice try!"
-msgstr "Error. Nice try!"
 
 #~ msgid "Selected language: "
 #~ msgstr "Selected language: "

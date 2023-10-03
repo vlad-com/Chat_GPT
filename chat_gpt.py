@@ -19,7 +19,7 @@ async def generate_text(messages, userid):
 
 
 async def generate_image(prompt):
-    response = openai.Image.create(
+    response = await openai.Image.acreate(
         prompt=prompt,
         n=1,
         size="512x512",
@@ -28,11 +28,11 @@ async def generate_image(prompt):
 
     return response['data'][0]['url']
 
-def whisper(path):
+async def whisper(path):
     size = os.path.getsize(path)
     if size < 25000000:
         audio_file= open(path, "rb")
-        transcript = openai.Audio.atranscribe(model="whisper-1", file=audio_file)["text"]
-        return transcript
+        transcript = await openai.Audio.atranscribe(model="whisper-1", file=audio_file)
+        return transcript["text"]
     else:
         raise Exception("Input file is to large(>25 Mb)") 

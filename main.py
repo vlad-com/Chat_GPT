@@ -2,14 +2,14 @@ import sys
 import logging
 import time
 import asyncio
-# from os import getenv
+from os import remove
 
 from aiogram import F
 from aiogram import Bot, Dispatcher, types
 from aiogram.enums import ParseMode
 from aiogram.filters import CommandStart, Command
 from aiogram.types import Message
-from aiogram.utils.markdown import hbold
+from aiogram.utils.markdown import bold
 from aiogram.utils.i18n import gettext as _
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
@@ -19,7 +19,7 @@ from aiogram.webhook.aiohttp_server import SimpleRequestHandler, setup_applicati
 from aiohttp import web
 
 from language_keyboard import make_row_keyboard, LanguageCallbackFactory, FLAGS
-from chat_gpt import generate_text, generate_image
+from chat_gpt import generate_text, generate_image, whisper
 import config
 messages = {}  # save all individual user messages
 
@@ -35,7 +35,7 @@ messages = {}  # save all individual user messages
 #    'sk', 'th', 'tr', 'uz',
 #    'vi', 'af',]
 
-bot = Bot(config.TOKEN, parse_mode=ParseMode.HTML)
+bot = Bot(config.TOKEN, parse_mode=ParseMode.MARKDOWN)
 i18n = I18n(path="locales", default_locale="en", domain="messages")
 i18n_midleware = FSMI18nMiddleware(i18n=i18n)
 available_languages = i18n.available_locales
@@ -43,6 +43,39 @@ available_languages = i18n.available_locales
 # All handlers should be attached to the Dispatcher (or Router)
 dp = Dispatcher()
 dp.message.middleware(i18n_midleware)
+
+
+def add_user_message(message: Message, user_message: str):
+    userid = message.from_user.username
+
+    if userid not in messages:
+        messages[userid] = []
+    messages[userid].append({"role": "user", "content": user_message})
+    messages[userid].append({"role": "user",
+                                "content": f"Now {time.strftime('%d/%m/%Y %H:%M:%S')} user: {message.from_user.full_name} message: {user_message}"})  # noqa: E501
+    logging.info(f'{userid}: {user_message}')
+
+
+async def answer_on_text(message: Message, user_message: str):
+    userid = message.from_user.username
+
+    if len(user_message) > 2048:
+        await message.reply(_('Currently, the character limit for ChatGPT is 2048 characters'))
+        return None
+
+    add_user_message(message, user_message)
+
+    processing_message = await message.reply(_('processing...'))
+    await bot.send_chat_action(chat_id=message.chat.id, action="typing")
+
+    try:
+        answer = await generate_text(messages[userid], userid)
+        await processing_message.edit_text(text=answer)
+    except Exception as e:
+        logging.error(e)
+        await message.reply(
+            _("Nice try!")
+        )
 
 
 class ChooseLanguage(StatesGroup):
@@ -62,7 +95,7 @@ async def command_start_handler(message: Message) -> None:
 
     await message.answer(
         _("Hello, {name}, im Chat GPT").format(
-            name=hbold(message.from_user.full_name)
+            name=bold(message.from_user.full_name)
         )
     )
 
@@ -106,6 +139,24 @@ async def language_cmd(message: Message, state: FSMContext):
     await state.set_state(ChooseLanguage.choosing_lang_name)
 
 
+@dp.message(F.voice)
+async def answer_by_voice(message: types.Message):
+    size = message.voice.file_size
+    if size < 25000000:
+        document = message.voice
+        filename = f"{message.from_user.id}.ogg"
+        await bot.download(document, destination=filename)
+
+        text_whisper = await whisper(filename)
+        logging.debug(f"text_whisper:{text_whisper}")
+        remove(filename)
+
+        await message.reply(f"Text: {text_whisper}")
+        await answer_on_text(message, text_whisper)
+    else:
+        await message.reply("Voice to large(>25 Mb)")
+
+
 @dp.callback_query(LanguageCallbackFactory.filter(F.action == "change"))
 async def callbacks_lang_change(
     callback: types.CallbackQuery,
@@ -122,33 +173,10 @@ async def callbacks_lang_change(
     await callback.answer()
 
 
-@dp.message()
-async def echo_handler(message: types.Message) -> None:
+@dp.message(F.text)
+async def text_handler(message: types.Message) -> None:
     user_message = message.text
-    userid = message.from_user.username
-
-    if len(user_message) > 2048:
-        await message.reply(_('Currently, the character limit for ChatGPT is 2048 characters'))
-        return None
-
-    if userid not in messages:
-        messages[userid] = []
-    messages[userid].append({"role": "user", "content": user_message})
-    messages[userid].append({"role": "user",
-                                "content": f"chat: {message.chat} Now {time.strftime('%d/%m/%Y %H:%M:%S')} user: {message.from_user.first_name} message: {message.text}"})  # noqa: E501
-    logging.info(f'{userid}: {user_message}')
-
-    await bot.send_chat_action(chat_id=message.chat.id, action="typing")
-    processing_message = await message.reply(_('processing...'))
-
-    try:
-        answer = await generate_text(messages[userid], userid)
-        await processing_message.edit_text(text=answer)
-    except Exception as e:
-        logging.error(e)
-        await message.reply(
-            _("Nice try!")
-        )
+    await answer_on_text(message, user_message)
 
 
 async def on_startup(bot: Bot) -> None:

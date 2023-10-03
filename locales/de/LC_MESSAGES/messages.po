@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2023-10-03 14:10+0300\n"
+"POT-Creation-Date: 2023-10-03 21:33+0300\n"
 "PO-Revision-Date: 2023-10-02 23:00+0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: de\n"
@@ -18,11 +18,23 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.12.1\n"
 
-#: main.py:62
+#: main.py:63
+msgid "Currently, the character limit for ChatGPT is 2048 characters"
+msgstr "Derzeit beträgt die Zeichenbeschränkung für ChatGPT 2048 Zeichen"
+
+#: main.py:68
+msgid "processing..."
+msgstr "Behandlung..."
+
+#: main.py:77
+msgid "Nice try!"
+msgstr "Fehler. Netter Versuch"
+
+#: main.py:97
 msgid "Hello, {name}, im Chat GPT"
 msgstr "Hallo, {name}, ich bin Chat GPT"
 
-#: main.py:71
+#: main.py:106
 msgid ""
 "This is a AI bot that will answer your questions.\n"
 "Change language: /language /lang /l\n"
@@ -32,7 +44,7 @@ msgstr ""
 "Sprache ändern: /Sprache /lang /l\n"
 "Bild erstellen (funktioniert nur mit GPT-4): /image /img /i"
 
-#: main.py:81
+#: main.py:116
 msgid ""
 "Please add a description of the image after the /image command. For "
 "example, /image Neon City."
@@ -40,27 +52,15 @@ msgstr ""
 "Bitte fügen Sie nach dem Befehl /image eine Beschreibung des Bildes "
 "hinzu. Für beispiel, /image Neon City."
 
-#: main.py:89
+#: main.py:124
 msgid "An error occurred during image generation:"
 msgstr "Bei der Bildgenerierung ist ein Fehler aufgetreten:"
 
-#: main.py:92
+#: main.py:127
 msgid "Sorry, works only with gpt-4"
 msgstr "Funktioniert leider nur mit gpt-4"
 
-#: main.py:100
+#: main.py:135
 msgid "language_selection"
 msgstr "Sprache wählen"
-
-#: main.py:129
-msgid "Currently, the character limit for ChatGPT is 2048 characters"
-msgstr "Derzeit beträgt die Zeichenbeschränkung für ChatGPT 2048 Zeichen"
-
-#: main.py:140
-msgid "processing..."
-msgstr "Behandlung..."
-
-#: main.py:148
-msgid "Nice try!"
-msgstr "Fehler. Netter Versuch"
 
