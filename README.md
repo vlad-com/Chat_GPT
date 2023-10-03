@@ -1,5 +1,5 @@
 # Chat_GPT
-
+Can respond to text and voice
 ## Install
 ### Clone repo:
 ```bash
