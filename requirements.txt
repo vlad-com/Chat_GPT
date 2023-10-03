@@ -1,0 +1,4 @@
+openai==0.28.1
+pipreqs==0.4.13
+aiogram[i18n]~=3.1.1
+environs

@@ -1,0 +1,66 @@
+# Italian translations for PROJECT.
+# Copyright (C) 2023 ORGANIZATION
+# This file is distributed under the same license as the PROJECT project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2023.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2023-10-03 14:10+0300\n"
+"PO-Revision-Date: 2023-10-02 23:00+0300\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: it\n"
+"Language-Team: it <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.12.1\n"
+
+#: main.py:62
+msgid "Hello, {name}, im Chat GPT"
+msgstr "Ciao, {name}, sono in Chat GPT"
+
+#: main.py:71
+msgid ""
+"This is a AI bot that will answer your questions.\n"
+"Change language: /language /lang /l\n"
+"Create image(works only with GPT-4): /image /img /i"
+msgstr ""
+"Questo è un bot IA che risponderà alle tue domande.\n"
+"Cambia lingua: /lingua /lang /l\n"
+"Crea immagine (funziona solo con GPT-4): /image /img /i"
+
+#: main.py:81
+msgid ""
+"Please add a description of the image after the /image command. For "
+"example, /image Neon City."
+msgstr ""
+"Aggiungi una descrizione dell'immagine dopo il comando /image. Per "
+"esempio, /immagine Neon City."
+
+#: main.py:89
+msgid "An error occurred during image generation:"
+msgstr "Si è verificato un errore durante la generazione dell'immagine:"
+
+#: main.py:92
+msgid "Sorry, works only with gpt-4"
+msgstr "Spiacenti, funziona solo con gpt-4"
+
+#: main.py:100
+msgid "language_selection"
+msgstr "Scegli la lingua"
+
+#: main.py:129
+msgid "Currently, the character limit for ChatGPT is 2048 characters"
+msgstr "Attualmente, il limite di caratteri per ChatGPT è di 2048 caratteri"
+
+#: main.py:140
+msgid "processing..."
+msgstr "Tratamiento..."
+
+#: main.py:148
+msgid "Nice try!"
+msgstr "Errore. Bel tentativo!"
+
