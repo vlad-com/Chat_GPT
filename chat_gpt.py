@@ -1,3 +1,4 @@
+import os
 import openai
 from config import OPENAI_API_KEY, MODEL
 
@@ -26,3 +27,12 @@ async def generate_image(prompt):
     )
 
     return response['data'][0]['url']
+
+def whisper(path):
+    size = os.path.getsize(path)
+    if size < 25000000:
+        audio_file= open(path, "rb")
+        transcript = openai.Audio.transcribe(model="whisper-1", file=audio_file)["text"]
+        return transcript
+    else:
+        raise Exception("Input file is to large(>25 Mb)") 
