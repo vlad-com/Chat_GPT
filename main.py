@@ -146,7 +146,8 @@ async def answer_by_voice(message: types.Message):
         document = message.voice
         filename = f"{message.from_user.id}.ogg"
         await bot.download(document, destination=filename)
-
+        await bot.send_chat_action(chat_id=message.chat.id, action="typing")
+        
         text_whisper = await whisper(filename)
         logging.debug(f"text_whisper:{text_whisper}")
         remove(filename)
@@ -155,6 +156,23 @@ async def answer_by_voice(message: types.Message):
         await answer_on_text(message, text_whisper)
     else:
         await message.reply("Voice to large(>25 Mb)")
+
+
+@dp.message(F.audio)
+async def transribe_audio(message: types.Message):
+    size = message.audio.file_size
+    if size < 25000000:
+        filename = f"{message.from_user.id}.ogg"
+        await bot.download(message.audio, destination=filename)
+        await bot.send_chat_action(chat_id=message.chat.id, action="typing")
+
+        text_whisper = await whisper(filename)
+        logging.debug(f"text_whisper:{text_whisper}")
+        remove(filename)
+
+        await message.reply(f"Text: {text_whisper}")
+    else:
+        await message.reply("Audio to large(>25 Mb)")
 
 
 @dp.callback_query(LanguageCallbackFactory.filter(F.action == "change"))
