@@ -32,7 +32,7 @@ def whisper(path):
     size = os.path.getsize(path)
     if size < 25000000:
         audio_file= open(path, "rb")
-        transcript = openai.Audio.transcribe(model="whisper-1", file=audio_file)["text"]
+        transcript = openai.Audio.atranscribe(model="whisper-1", file=audio_file)["text"]
         return transcript
     else:
         raise Exception("Input file is to large(>25 Mb)") 
