@@ -9,7 +9,7 @@ from aiogram import Bot, Dispatcher, types
 from aiogram.enums import ParseMode
 from aiogram.filters import CommandStart, Command
 from aiogram.types import Message
-from aiogram.utils.markdown import bold
+from aiogram.utils.markdown import hbold
 from aiogram.utils.i18n import gettext as _
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
@@ -19,7 +19,7 @@ from aiogram.webhook.aiohttp_server import SimpleRequestHandler, setup_applicati
 from aiohttp import web
 
 from language_keyboard import make_row_keyboard, LanguageCallbackFactory, FLAGS
-from chat_gpt import generate_text, generate_image, whisper
+from chat_gpt import generate_text_chunks, generate_image, whisper, message_to_tg_chunks
 import config
 messages = {}  # save all individual user messages
 
@@ -35,7 +35,7 @@ messages = {}  # save all individual user messages
 #    'sk', 'th', 'tr', 'uz',
 #    'vi', 'af',]
 
-bot = Bot(config.TOKEN, parse_mode=ParseMode.MARKDOWN)
+bot = Bot(config.TOKEN, parse_mode=ParseMode.HTML)
 i18n = I18n(path="locales", default_locale="en", domain="messages")
 i18n_midleware = FSMI18nMiddleware(i18n=i18n)
 available_languages = i18n.available_locales
@@ -68,9 +68,21 @@ async def answer_on_text(message: Message, user_message: str):
     processing_message = await message.reply(_('processing...'))
     await bot.send_chat_action(chat_id=message.chat.id, action="typing")
 
+    full_answer = ""
     try:
-        answer = await generate_text(messages[userid], userid)
-        await processing_message.edit_text(text=answer)
+        chunks = await generate_text_chunks(messages[userid], userid)
+        async for chunk in chunks:
+            content = chunk["choices"][0].get("delta", {}).get("content")
+            if content is not None and len(content) > 0:
+                full_answer += content
+                if content == " ":  # telegram thinks its trash message
+                    continue
+                if len(full_answer) < 4095:
+                    await processing_message.edit_text(text=full_answer)
+                else: # new message
+                    full_answer = content
+                    processing_message = await message.reply(text=full_answer)
+
     except Exception as e:
         logging.error(e)
         await message.reply(
@@ -91,11 +103,14 @@ async def command_start_handler(message: Message) -> None:
     userid = message.from_user.id
 
     if userid not in messages:
-        messages[userid] = []
+        answer = _("Hello, {name}, im Chat GPT")
+    else:
+        answer = _("Hello, {name}, all messages cleaned")
+    messages[userid] = []
 
     await message.answer(
-        _("Hello, {name}, im Chat GPT").format(
-            name=bold(message.from_user.full_name)
+        _(answer).format(
+            name=hbold(message.from_user.full_name)
         )
     )
 
@@ -147,12 +162,13 @@ async def answer_by_voice(message: types.Message):
         filename = f"{message.from_user.id}.ogg"
         await bot.download(document, destination=filename)
         await bot.send_chat_action(chat_id=message.chat.id, action="typing")
-        
+
         text_whisper = await whisper(filename)
         logging.debug(f"text_whisper:{text_whisper}")
         remove(filename)
 
-        await message.reply(f"Text: {text_whisper}")
+        for text in message_to_tg_chunks(text_whisper):
+            await message.reply(f"Text: {text}")
         await answer_on_text(message, text_whisper)
     else:
         await message.reply("Voice to large(>25 Mb)")
@@ -170,7 +186,8 @@ async def transribe_audio(message: types.Message):
         logging.debug(f"text_whisper:{text_whisper}")
         remove(filename)
 
-        await message.reply(f"Text: {text_whisper}")
+        for text in message_to_tg_chunks(text_whisper):
+            await message.reply(f"Text: {text}")
     else:
         await message.reply("Audio to large(>25 Mb)")
 

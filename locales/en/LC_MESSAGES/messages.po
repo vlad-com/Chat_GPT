@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2023-10-03 21:33+0300\n"
+"POT-Creation-Date: 2023-10-11 19:40+0300\n"
 "PO-Revision-Date: 2023-10-02 22:36+0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en\n"
@@ -26,36 +26,40 @@ msgstr ""
 msgid "processing..."
 msgstr ""
 
-#: main.py:77
+#: main.py:87
 msgid "Nice try!"
 msgstr "Error. Nice try!"
 
-#: main.py:97
+#: main.py:104
 msgid "Hello, {name}, im Chat GPT"
 msgstr ""
 
 #: main.py:106
+msgid "Hello, {name}, all messages cleaned"
+msgstr ""
+
+#: main.py:119
 msgid ""
 "This is a AI bot that will answer your questions.\n"
 "Change language: /language /lang /l\n"
 "Create image(works only with GPT-4): /image /img /i"
 msgstr ""
 
-#: main.py:116
+#: main.py:129
 msgid ""
 "Please add a description of the image after the /image command. For "
 "example, /image Neon City."
 msgstr ""
 
-#: main.py:124
+#: main.py:137
 msgid "An error occurred during image generation:"
 msgstr ""
 
-#: main.py:127
+#: main.py:140
 msgid "Sorry, works only with gpt-4"
 msgstr ""
 
-#: main.py:135
+#: main.py:148
 msgid "language_selection"
 msgstr "Select language:"
 

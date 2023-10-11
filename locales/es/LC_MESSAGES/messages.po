@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2023-10-03 21:33+0300\n"
+"POT-Creation-Date: 2023-10-11 19:40+0300\n"
 "PO-Revision-Date: 2023-10-02 23:00+0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: es\n"
@@ -26,15 +26,19 @@ msgstr "Actualmente, el límite de caracteres para ChatGPT es de 2048 caracteres
 msgid "processing..."
 msgstr "Tratamiento..."
 
-#: main.py:77
+#: main.py:87
 msgid "Nice try!"
 msgstr "Error. ¡Buen intento!"
 
-#: main.py:97
+#: main.py:104
 msgid "Hello, {name}, im Chat GPT"
 msgstr "Hola, {name}, soy Chat GPT"
 
 #: main.py:106
+msgid "Hello, {name}, all messages cleaned"
+msgstr "Hola, {name}, soy Chat GPT"
+
+#: main.py:119
 msgid ""
 "This is a AI bot that will answer your questions.\n"
 "Change language: /language /lang /l\n"
@@ -44,7 +48,7 @@ msgstr ""
 "Cambiar idioma: /idioma /lang /l\n"
 "Crear imagen (funciona solo con GPT-4): /image /img /i"
 
-#: main.py:116
+#: main.py:129
 msgid ""
 "Please add a description of the image after the /image command. For "
 "example, /image Neon City."
@@ -52,15 +56,15 @@ msgstr ""
 "Agregue una descripción de la imagen después del comando /imagen. Para "
 "ejemplo, /imagen Ciudad Neón."
 
-#: main.py:124
+#: main.py:137
 msgid "An error occurred during image generation:"
 msgstr "Se produjo un error durante la generación de la imagen:"
 
-#: main.py:127
+#: main.py:140
 msgid "Sorry, works only with gpt-4"
 msgstr "Lo sentimos, sólo funciona con gpt-4"
 
-#: main.py:135
+#: main.py:148
 msgid "language_selection"
 msgstr "Elige lengua"
 
