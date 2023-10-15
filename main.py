@@ -46,7 +46,8 @@ dp.message.middleware(i18n_midleware)
 
 
 def add_user_message(message: Message, user_message: str):
-    userid = message.from_user.username
+    global messages
+    userid = message.from_user.id
 
     if userid not in messages:
         messages[userid] = []
@@ -57,7 +58,8 @@ def add_user_message(message: Message, user_message: str):
 
 
 async def answer_on_text(message: Message, user_message: str):
-    userid = message.from_user.username
+    global messages
+    userid = message.from_user.id
 
     if len(user_message) > 2048:
         await message.reply(_('Currently, the character limit for ChatGPT is 2048 characters'))
@@ -65,29 +67,49 @@ async def answer_on_text(message: Message, user_message: str):
 
     add_user_message(message, user_message)
 
+    # await message.reply(f'msgs:{len(messages[userid])}, userid:{userid}')
     processing_message = await message.reply(_('processing...'))
     await bot.send_chat_action(chat_id=message.chat.id, action="typing")
 
     full_answer = ""
     try:
+        logging.info(f'messages: {len(messages[userid])}, userid:{userid}')
         chunks = await generate_text_chunks(messages[userid], userid)
+        num = 0
+        answered = False
+        flood_restriction = 25
+
         async for chunk in chunks:
             content = chunk["choices"][0].get("delta", {}).get("content")
             if content is not None and len(content) > 0:
+                num += 1
                 full_answer += content
                 if content == " ":  # telegram thinks its trash message
                     continue
-                if len(full_answer) < 4095:
-                    await processing_message.edit_text(text=full_answer)
-                else: # new message
-                    full_answer = content
-                    processing_message = await message.reply(text=full_answer)
+                if num > flood_restriction:  # Flood 5 msg/sec
+                    num = 0
+                    answered = True
+                    if len(full_answer) < 4095:
+                        await processing_message.edit_text(text=full_answer)
+                    else:  # new message
+                        full_answer = content
+                        processing_message = await message.reply(text=full_answer)
+                else:
+                    answered = False
+
+        if not answered:
+            if len(full_answer) < 4095:
+                await processing_message.edit_text(text=full_answer)
+            else:  # new message
+                full_answer = content
+                processing_message = await message.reply(text=full_answer)
 
     except Exception as e:
         logging.error(e)
         await message.reply(
             _("Nice try!")
         )
+        await message.reply(f'msgs:{len(messages[userid])},userid:{userid}')
 
 
 class ChooseLanguage(StatesGroup):
@@ -100,6 +122,7 @@ async def command_start_handler(message: Message) -> None:
     """
     This handler receives messages with `/start` command
     """
+    global messages
     userid = message.from_user.id
 
     if userid not in messages:
@@ -107,6 +130,8 @@ async def command_start_handler(message: Message) -> None:
     else:
         answer = _("Hello, {name}, all messages cleaned")
     messages[userid] = []
+    
+    answer+=f' msgs:{len(messages[userid])},userid:{userid}'
 
     await message.answer(
         _(answer).format(
