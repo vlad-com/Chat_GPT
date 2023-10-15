@@ -13,7 +13,7 @@ async def generate_text(messages, userid):
         temperature=0.7,
         frequency_penalty=0,
         presence_penalty=0,
-        user=userid
+        user=str(userid)
     )
     return completion.choices[0]['message']['content']
 
@@ -26,7 +26,7 @@ async def generate_text_chunks(messages, userid):
         temperature=0.7,
         frequency_penalty=0,
         presence_penalty=0,
-        user=userid,
+        user=str(userid),
         stream=True,
     )
 
