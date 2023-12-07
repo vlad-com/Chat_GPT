@@ -8,10 +8,14 @@ env.read_env()
 # Bot token can be obtained via https://t.me/BotFather
 TOKEN: str = env.str("TOKEN")
 # OpenAi key can be obtained via https://platform.openai.com/account/api-keys
-OPENAI_API_KEY: str = env.str("OPENAI_API_KEY")
+OPENAI_API_KEY: str = env.str("OPENAI_API_KEY", "key")
 MODEL = env.str("MODEL", "gpt-3.5-turbo")  # gpt-3.5-turbo or gpt-4
 USE_WEBHOOK: bool = env.bool("USE_WEBHOOK", False)
+USE_G4F: bool = env.bool("USE_G4F", False)
+
 info(f"USE_WEBHOOK: {USE_WEBHOOK}")
+info(f"MODEL: '{MODEL}'")
+info(f"USE_G4F: {USE_G4F}")
 
 if USE_WEBHOOK:
     WEBHOOK_PATH: str = env.str("WEBHOOK_PATH", "/bot/")
