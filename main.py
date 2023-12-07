@@ -19,8 +19,23 @@ from aiogram.webhook.aiohttp_server import SimpleRequestHandler, setup_applicati
 from aiohttp import web
 
 from language_keyboard import make_row_keyboard, LanguageCallbackFactory, FLAGS
-from chat_gpt import generate_text_chunks, generate_image, whisper, message_to_tg_chunks
+from chat_gpt import (
+    generate_text_chunks,
+    generate_image,
+    whisper,
+    message_to_tg_chunks,
+)
 import config
+
+if config.USE_G4F:
+    from chat_gpt import g4f_generate_text
+
+    generate_text = g4f_generate_text
+else:
+    from chat_gpt import generate_text
+
+    generate_text = generate_text
+
 messages = {}  # save all individual user messages
 
 # TODO: add more languages
@@ -45,49 +60,101 @@ dp = Dispatcher()
 dp.message.middleware(i18n_midleware)
 
 
+# async def stream_answer(message, messages, userid):
+#     full_answer = ""
+#     num = 0
+#     answered = False
+#     flood_restriction = 25
+
+#     processing_message = await message.reply(_("processing..."))
+#     await bot.send_chat_action(chat_id=message.chat.id, action="typing")
+
+#     chunks = await generate_text_chunks(messages[userid], userid)
+    
+#     async for chunk in chunks:
+#         if chunk.choices[0].delta.content is not None:
+#             content = chunk.choices[0].delta.content
+#             num += 1
+#             full_answer += content
+#             if content == " ":  # telegram thinks its trash message
+#                 continue
+#             if num > flood_restriction:  # Flood 5 msg/sec
+#                 num = 0
+#                 answered = True
+#                 if len(full_answer) < 4095:
+#                     await processing_message.edit_text(text=full_answer)
+#                 else:  # new message
+#                     full_answer = content
+#                     processing_message = await message.reply(text=full_answer)
+#             else:
+#                 answered = False
+
+#     if not answered:
+#         if len(full_answer) < 4095:
+#             await processing_message.edit_text(text=full_answer)
+#         else:  # new message
+#             full_answer = content
+#             processing_message = await message.reply(text=full_answer)
+
+
+# Function for trimming conversation history
+def trim_history(history, max_length=4096):
+    current_length = sum(len(message["content"]) for message in history)
+    while history and current_length > max_length:
+        removed_message = history.pop(0)
+        current_length -= len(removed_message["content"])
+    return history
+
+
 def add_user_message(message: Message, user_message: str):
-    userid = message.from_user.username
+    global messages
+    userid = message.from_user.id
 
     if userid not in messages:
         messages[userid] = []
     messages[userid].append({"role": "user", "content": user_message})
-    messages[userid].append({"role": "user",
-                                "content": f"Now {time.strftime('%d/%m/%Y %H:%M:%S')} user: {message.from_user.full_name} message: {user_message}"})  # noqa: E501
-    logging.info(f'{userid}: {user_message}')
+    messages[userid].append(
+        {
+            "role": "user",
+            "content": f"Now {time.strftime('%d/%m/%Y %H:%M:%S')} user: {message.from_user.full_name} message: {user_message}",
+        }
+    )  # noqa: E501
+    logging.info(f"{userid}: {user_message}")
+    messages[userid] = trim_history(messages[userid])
 
 
 async def answer_on_text(message: Message, user_message: str):
-    userid = message.from_user.username
+    global messages
+    userid = message.from_user.id
 
     if len(user_message) > 2048:
-        await message.reply(_('Currently, the character limit for ChatGPT is 2048 characters'))
+        await message.reply(_("Currently, the character limit for ChatGPT is 2048 characters"))
         return None
 
     add_user_message(message, user_message)
 
-    processing_message = await message.reply(_('processing...'))
+    processing_message = await message.reply(_("processing..."))
     await bot.send_chat_action(chat_id=message.chat.id, action="typing")
 
-    full_answer = ""
     try:
-        chunks = await generate_text_chunks(messages[userid], userid)
-        async for chunk in chunks:
-            content = chunk["choices"][0].get("delta", {}).get("content")
-            if content is not None and len(content) > 0:
-                full_answer += content
-                if content == " ":  # telegram thinks its trash message
-                    continue
-                if len(full_answer) < 4095:
-                    await processing_message.edit_text(text=full_answer)
-                else: # new message
-                    full_answer = content
-                    processing_message = await message.reply(text=full_answer)
+        logging.info(f"messages: {len(messages[userid])}, userid:{userid}")
+        # await stream_answer(message,messages,userid) # For stream type asnwer
+
+        answer = await generate_text(messages[userid], userid)
+        if len(answer) < 4095:
+            await processing_message.edit_text(text=answer,parse_mode=ParseMode.MARKDOWN)
+        else:
+            K = 4094
+            chnk_len = len(answer) // K
+
+            for idx in range(0, len(answer), chnk_len):
+                await message.reply(text=answer[idx : idx + chnk_len],parse_mode=ParseMode.MARKDOWN)
 
     except Exception as e:
         logging.error(e)
-        await message.reply(
-            _("Nice try!")
-        )
+        await message.reply(_(f"Nice try! {e}"))
+        await message.reply(f"msgs:{len(messages[userid])},userid:{userid}")
+        messages[userid] = []
 
 
 class ChooseLanguage(StatesGroup):
@@ -100,6 +167,7 @@ async def command_start_handler(message: Message) -> None:
     """
     This handler receives messages with `/start` command
     """
+    global messages
     userid = message.from_user.id
 
     if userid not in messages:
@@ -108,48 +176,38 @@ async def command_start_handler(message: Message) -> None:
         answer = _("Hello, {name}, all messages cleaned")
     messages[userid] = []
 
-    await message.answer(
-        _(answer).format(
-            name=hbold(message.from_user.full_name)
-        )
-    )
+    answer += f" msgs:{len(messages[userid])},userid:{userid}"
+
+    await message.answer(_(answer).format(name=hbold(message.from_user.full_name)))
 
 
 @dp.message(Command("help", "h"))
 async def command_help_handler(message: Message) -> None:
-    await message.answer(
-        _("This is a AI bot that will answer your questions.\nChange language: /language /lang /l\nCreate image(works only with GPT-4): /image /img /i")
-    )
+    await message.answer(_("This is a AI bot that will answer your questions.\nChange language: /language /lang /l\nCreate image(works only with GPT-4): /image /img /i"))
 
 
 @dp.message(Command("image", "img", "i"))
 async def send_image(message: Message):
     if config.MODEL == "gpt-4":
         try:
-            description = message.text.replace('/image', '').strip()
+            description = message.text.replace("/image", "").strip()
             if not description:
                 await message.reply(_("Please add a description of the image after the /image command. For example, /image Neon City."))
                 return
         except Exception as e:
-            logging.error(f'Error in send_image: {e}')
+            logging.error(f"Error in send_image: {e}")
         try:
             image_url = await generate_image(description)
             await message.answer_photo(chat_id=message.chat.id, photo=image_url)
         except Exception as e:
             await message.reply(_("An error occurred during image generation:") + str(e))
     else:
-        await message.answer(
-            _("Sorry, works only with gpt-4")
-        )
+        await message.answer(_("Sorry, works only with gpt-4"))
 
 
 @dp.message(Command("language", "lang", "l"))
 async def language_cmd(message: Message, state: FSMContext):
-
-    await message.answer(
-        _('language_selection'),
-        reply_markup=make_row_keyboard(available_languages)
-    )
+    await message.answer(_("language_selection"), reply_markup=make_row_keyboard(available_languages))
     # Set user state choosing lang
     await state.set_state(ChooseLanguage.choosing_lang_name)
 
@@ -201,10 +259,13 @@ async def callbacks_lang_change(
     user_id = callback.from_user.id
     language = callback_data.value
     logging.debug(
-        f'user_id:{user_id}, callback_data: action:{callback_data.action},value:{language}')
+        f"user_id:{user_id}, callback_data: action:{callback_data.action},value:{language}"
+    )
 
     await i18n_midleware.set_locale(state, language)
-    await callback.message.edit_text(f"Selected language: {FLAGS[language]['flag']} {language}, {FLAGS[language]['native']}")
+    await callback.message.edit_text(
+        f"Selected language: {FLAGS[language]['flag']} {language}, {FLAGS[language]['native']}"
+    )
     await callback.answer()
 
 
@@ -217,7 +278,9 @@ async def text_handler(message: types.Message) -> None:
 async def on_startup(bot: Bot) -> None:
     # If you have a self-signed SSL certificate, then you will need to send a public
     # certificate to Telegram
-    await bot.set_webhook(f"{config.BASE_WEBHOOK_URL}{config.WEBHOOK_PATH}", drop_pending_updates=True)
+    await bot.set_webhook(
+        f"{config.BASE_WEBHOOK_URL}{config.WEBHOOK_PATH}", drop_pending_updates=True
+    )
 
 
 def main_webhook() -> None:
