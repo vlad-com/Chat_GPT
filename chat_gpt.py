@@ -42,6 +42,11 @@ async def generate_text_chunks(messages, userid):
     return await client.chat.completions.create(
         model=MODEL,
         messages=messages,
+        max_tokens=2500,
+        temperature=0.7,
+        frequency_penalty=0,
+        presence_penalty=0,
+        user=str(userid),
         stream=True,
     )
 
